@@ -1,19 +1,48 @@
+-------------------------------------------------
+-- CONFIG
+-------------------------------------------------
+
+local token = "YOUR_TOKEN_HERE"
+local channelId = "YOUR_CHANNEL_ID_HERE"
+local delay = 0.1
+
+-------------------------------------------------
+-- WAIT FOR GAME
+-------------------------------------------------
+
 if not game:IsLoaded() then
-	game.Loaded:Wait() -- Wait for game to load
+    game.Loaded:Wait()
 end
 
-if token == "MTQ4MjIxNTQxMzgxODMyNzA2MA.G8xb4n.HswfjR8l1KPXi1Ki3ujOFdDrEdeMkRUVUK_QLc" or channelId == "1482215680718929982" then
-    game.Players.LocalPlayer:kick("Add your token or channelId to use")
-end
+-------------------------------------------------
+-- SERVICES
+-------------------------------------------------
 
-local bb = game:GetService("VirtualUser") -- Anti AFK
-game:service "Players".LocalPlayer.Idled:connect(function()
-    bb:CaptureController()
-    bb:ClickButton2(Vector2.new())
-end)
-
+local Players = game:GetService("Players")
 local HttpServ = game:GetService("HttpService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local TeleportService = game:GetService("TeleportService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local VirtualUser = game:GetService("VirtualUser")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-------------------------------------------------
+-- UNIVERSAL REQUEST FUNCTION
+-------------------------------------------------
+
+local request =
+    (syn and syn.request) or
+    http_request or
+    (fluxus and fluxus.request) or
+    request
+
+if not request then
+    warn("Executor does not support HTTP requests")
+    return
+end
 local victimFile = isfile("user.txt")
 local joinedFile = isfile("joined_ids.txt")
 if not victimFile then
